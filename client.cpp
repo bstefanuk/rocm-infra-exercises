@@ -18,36 +18,11 @@ intT1 ceildiv(const intT1 numerator, const intT2 divisor)
 }
 
 
-/**
- * @brief A simple vector addition example using HIP
- * @details This function adds two vectors of floats on the GPU and returns the result.
- * The vectors are allocated on the host and copied to the device.
- * The kernel is launched with a grid of blocks, each block containing a number of threads.
- * Each thread computes one element of the result vector.
- * The result is copied back to the host and verified.
- * 
- * @param[in,out] a First vector, contains the result after execution
- * @param[in] b Second vector to be added
- * @param[in] N Size of the vectors
- */
-__global__ void vector_add(float* a, const float* b, const int N)
-{
-    // Solution
-    {
-
-        const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-        printf("adding %d elements on indx %d\n", N, idx);
-
-        if(idx < N) 
-            a[idx] += b[idx];
-    }
-}
-
 int main()
 {
     std::cout << "HIP vector addition example\n";
 
-    const int N = 16;
+    const int N = 4;
 
     std::cout << "N: " << N << "\n";
     
@@ -89,8 +64,16 @@ int main()
             throw std::runtime_error("hipMemcpy failed");
         }
 
+        // Load the kernel        
+        hipModule_t module;
+        hipError_t err = hipModuleLoad(&module, "client_lib_bundle_tmp.cpp.o");
+        if(err != hipSuccess) {
+            std::cerr << "hipModuleLoad failed: " << hipGetErrorString(err) << "\n";
+            return -1;
+        }
+
         // Launch the kernel
-        int blockSize = 512;
+        int blockSize = 8;
         const int gridSize    = ceildiv(N, blockSize);
         std::cout << "blockSize: " << blockSize << "\n";
         std::cout << "gridSize: " << gridSize << "\n";
@@ -109,6 +92,7 @@ int main()
         }
         
         // Release device memory
+        hipModuleUnload(module);
         if(hipFree(d_a) != hipSuccess)
         {
             throw std::runtime_error("hipFree failed");
