@@ -22,7 +22,7 @@ int main()
 {
     std::cout << "HIP vector addition example\n";
 
-    const int N = 4;
+    int N = 4;
 
     std::cout << "N: " << N << "\n";
     
@@ -66,9 +66,17 @@ int main()
 
         // Load the kernel        
         hipModule_t module;
-        hipError_t err = hipModuleLoad(&module, "client_lib_bundle_tmp.cpp.o");
+        hipError_t err = hipModuleLoad(&module, "lib.hsaco");
         if(err != hipSuccess) {
             std::cerr << "hipModuleLoad failed: " << hipGetErrorString(err) << "\n";
+            return -1;
+        }
+
+        hipFunction_t kernel;
+        err = hipModuleGetFunction(&kernel, module, "vector_add");
+        if(err != hipSuccess) {
+            std::cerr << "hipModuleGetFunction failed: " << hipGetErrorString(err) << "\n";
+            hipModuleUnload(module);
             return -1;
         }
 
@@ -77,7 +85,25 @@ int main()
         const int gridSize    = ceildiv(N, blockSize);
         std::cout << "blockSize: " << blockSize << "\n";
         std::cout << "gridSize: " << gridSize << "\n";
-        vector_add<<<dim3(gridSize), dim3(blockSize)>>>(d_a, d_b, N);
+
+        //! We cannot use the hipLaunchKernelGGL macro here because we are using a module
+        // vector_add<<<dim3(gridSize), dim3(blockSize)>>>(d_a, d_b, N);
+        void* kernelArgs[] = {&d_a, &d_b, &N};
+
+        dim3 gridDim(gridSize);
+        dim3 blockDim(blockSize);
+
+        err = hipModuleLaunchKernel(kernel,
+            gridDim.x, gridDim.y, gridDim.z,
+            blockDim.x, blockDim.y, blockDim.z,
+            0, 0,
+            kernelArgs,
+            0);
+        if(err != hipSuccess) {
+            std::cerr << "hipModuleLaunchKernel failed: " << hipGetErrorString(err) << "\n";
+            hipModuleUnload(module);
+            return -1;
+        }
 
         auto ret = hipDeviceSynchronize();
         if(hipGetLastError() != hipSuccess)

@@ -1,6 +1,6 @@
 #include <hip/hip_runtime.h>
 
-__global__ void vector_add(float* a, const float* b, const int N)
+extern "C" __global__ void vector_add(float* a, const float* b, const int N)
 {
     // Solution
     {
