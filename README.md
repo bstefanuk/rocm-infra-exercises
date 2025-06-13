@@ -1,3 +1,4 @@
 # ROCm Infra Exercises
 
-A set of exercises for onboarding new developers onto the ROCm (Tensile) Infrastructure Team.
+> [!NOTE]
+> A set of exercises for developers to familiarize themselves with concepts important to the Tensile Infrastructure team
