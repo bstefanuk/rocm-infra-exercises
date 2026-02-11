@@ -1,4 +1,8 @@
-# Exercise: Loading and Executing a Separately Compiled HIP Code Object
+# Loading and Executing a Separately Compiled HIP Code Object
+
+Stage: 🌳 Mature
+
+---
 
 **Objective:** This exercise will guide you through loading a pre-compiled HIP device code object using the HIP runtime and executing a kernel from it. This contrasts with the common approach where host and device code reside in the same source file and are compiled together. You'll learn how to compile device code into a standalone code object and then use hipModuleLoad() in your host application to execute it.
 
@@ -98,7 +102,7 @@ $ /opt/rocm/bin/amdclang++                                   \
 ```
 
 ```bash
-$ nm -C client_lib_bundle_YEEHAH.cpp.o | grep vector_add
+$ nm -C client_lib_bundle_obj.cpp.o | grep vector_add
 0000000000000000 R vector_add(float*, float const*, int)
 0000000000000000 T __device_stub__vector_add(float*, float const*, int)
 ```
